@@ -1,6 +1,8 @@
 # SD Technology - Sistema de Gestión de Inventario
 
 SD Technology es una solución digital inteligente diseñada para transformar la manera en que gestionas tu inventario. Esta aplicación web permite a los usuarios gestionar productos, ventas, promociones y generar reportes de manera eficiente.
+# Aclaración al Docente
+El equipo de desarrollo decidio crear un repositorio totalmente nuevo para el desarrollo de esta actividad añadiendo las implementaciones antiguas en la anterior entrega.
 
 ## 🚀 Características
 
