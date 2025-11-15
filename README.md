@@ -357,15 +357,6 @@ El script `backend/database.sql` incluye datos de ejemplo para probar la aplicac
 - Las notificaciones se muestran en la consola del servidor
 - Los reportes se pueden descargar en formato JSON
 
-## 🤝 Contribuir
-
-Este es un proyecto prototipo. Si deseas contribuir:
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
 
 ## 📄 Licencia
 
@@ -373,11 +364,14 @@ Este proyecto es de código abierto y está disponible bajo la licencia MIT.
 
 ## 👥 Autores
 
-- Equipo SD Technology
+- Equipo
+- ALEXIS DIAZ
+- SARA ROJAS
+- YORQUIS MURRILLO
 
 ## 🙏 Agradecimientos
 
-- A todos los contribuyentes y la comunidad de código abierto
+- A todos los contribuyentes 
 
 ---
 
