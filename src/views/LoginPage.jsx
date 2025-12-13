@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import SDLogo from '@/components/ui/SDLogo';
+import { signIn } from '@/services/auth';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -15,18 +16,27 @@ const LoginPage = () => {
     password: ''
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.email && formData.password) {
+    if (!formData.email || !formData.password) {
+      toast({
+        title: "Error",
+        description: "Por favor completa todos los campos",
+        variant: "destructive"
+      });
+      return;
+    }
+    try {
+      await signIn(formData.email, formData.password);
       toast({
         title: "¡Bienvenido!",
         description: "Inicio de sesión exitoso",
       });
       navigate('/dashboard');
-    } else {
+    } catch (error) {
       toast({
-        title: "Error",
-        description: "Por favor completa todos los campos",
+        title: "No se pudo iniciar sesión",
+        description: error.message || "Revisa tus credenciales",
         variant: "destructive"
       });
     }

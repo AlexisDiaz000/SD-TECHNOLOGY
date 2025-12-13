@@ -5,50 +5,27 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, X, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import SDLogo from '@/components/ui/SDLogo';
+import { signIn } from '@/services/auth';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    country: ''
+    password: ''
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isRegistering) {
-      if (formData.email && formData.password && formData.country) {
-        toast({
-          title: "¡Cuenta creada!",
-          description: "Tu cuenta ha sido creada exitosamente",
-        });
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: "Error",
-          description: "Por favor completa todos los campos",
-          variant: "destructive"
-        });
-      }
-    } else {
-      if (formData.email && formData.password) {
-        toast({
-          title: "¡Bienvenido!",
-          description: "Inicio de sesión exitoso",
-        });
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: "Error",
-          description: "Por favor completa todos los campos",
-          variant: "destructive"
-        });
-      }
+    try {
+      if (!formData.email || !formData.password) throw new Error('Completa email y contraseña');
+      await signIn(formData.email, formData.password);
+      toast({ title: 'Inicio de sesión exitoso' });
+      navigate('/dashboard');
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
   };
 
@@ -131,7 +108,7 @@ const RegisterPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.5 }}
                 >
-                  {isRegistering ? 'Create an account' : 'Welcome back!'}
+                  Welcome back!
                 </motion.h1>
                 
                 <motion.p 
@@ -140,16 +117,7 @@ const RegisterPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.6 }}
                 >
-                  {isRegistering ? 'Already have an account?' : 'New to SD Technology?'}{' '}
-                  <button 
-                    onClick={() => {
-                      setIsRegistering(!isRegistering);
-                      setFormData({ email: '', password: '', country: ''});
-                    }}
-                    className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
-                  >
-                    {isRegistering ? 'Log in' : 'Sign up'}
-                  </button>
+                  Acceso sólo con cuentas creadas por administrador.
                 </motion.p>
               </div>
 
@@ -184,7 +152,7 @@ const RegisterPage = () => {
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      placeholder={isRegistering ? "Crea una contraseña" : "Ingresa tu contraseña"}
+                      placeholder="Ingresa tu contraseña"
                       className="w-full pr-10 md:pr-12"
                     />
                     <button
@@ -200,26 +168,7 @@ const RegisterPage = () => {
                   </div>
                 </div>
 
-                {isRegistering && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 md:mb-2">
-                      Country of residence
-                    </label>
-                     <Select onChange={handleSelectChange} value={formData.country} name="country">
-                      <option value="">Selecciona tu país</option>
-                      <option value="colombia">Colombia</option>
-                      <option value="mexico">México</option>
-                      <option value="argentina">Argentina</option>
-                      <option value="chile">Chile</option>
-                      <option value="peru">Perú</option>
-                      <option value="venezuela">Venezuela</option>
-                      <option value="ecuador">Ecuador</option>
-                      <option value="bolivia">Bolivia</option>
-                      <option value="uruguay">Uruguay</option>
-                      <option value="paraguay">Paraguay</option>
-                    </Select>
-                  </div>
-                )}
+                
 
                 <motion.div
                   whileHover={{ scale: 1.02 }}
@@ -229,21 +178,11 @@ const RegisterPage = () => {
                     type="submit"
                     className="w-full h-10 md:h-12 bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-lg transition-all duration-200 text-sm md:text-base"
                   >
-                    {isRegistering ? 'Create an account' : 'LOGIN'}
+                    LOGIN
                   </Button>
                 </motion.div>
 
-                <div className="text-center">
-                  <p className="text-xs md:text-sm text-gray-600 mb-2 md:mb-4">Or, continue with</p>
-                  <motion.button
-                    type="button"
-                    className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 text-sm md:text-base"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Google
-                  </motion.button>
-                </div>
+                
               </motion.form>
             </div>
           </motion.div>
