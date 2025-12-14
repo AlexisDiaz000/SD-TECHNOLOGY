@@ -20,29 +20,29 @@ const StockPage = () => {
     category: '',
     supplier: ''
   });
-  const [priceDisplay, setPriceDisplay] = useState('0,00');
+  const [priceDisplay, setPriceDisplay] = useState('0');
 
   const formatCurrencyCOP = (value) => {
     try {
       return new Intl.NumberFormat('es-CO', {
         style: 'currency',
         currency: 'COP',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
       }).format(Number.isFinite(value) ? value : 0);
     } catch {
-      return `$${(value ?? 0).toFixed(2)}`;
+      return `$${(value ?? 0).toFixed(0)}`;
     }
   };
 
   const formatNumberEsCO = (value) => {
     try {
       return new Intl.NumberFormat('es-CO', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
       }).format(Number.isFinite(value) ? value : 0);
     } catch {
-      return (value ?? 0).toFixed(2);
+      return (value ?? 0).toFixed(0);
     }
   };
 
@@ -139,7 +139,7 @@ const StockPage = () => {
   const openNewModal = () => {
     setEditingStock(null);
     setFormData({ name: '', amount: 0, price: 0, min_stock: 0, category: '', supplier: '' });
-    setPriceDisplay('0,00');
+    setPriceDisplay('0');
     setShowModal(true);
   };
 
@@ -346,13 +346,11 @@ const StockPage = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Precio (COP)</label>
                   <input
                     type="text"
-                    inputMode="decimal"
                     value={priceDisplay}
                     onChange={(e) => {
                       const raw = e.target.value.replace(/[^\d]/g, '');
                       const trimmed = raw.replace(/^0+(?=\d)/, '');
-                      const cents = trimmed === '' ? 0 : parseInt(trimmed, 10);
-                      const value = cents / 100;
+                      const value = trimmed === '' ? 0 : parseInt(trimmed, 10);
                       setPriceDisplay(formatNumberEsCO(value));
                       setFormData({ ...formData, price: value });
                     }}

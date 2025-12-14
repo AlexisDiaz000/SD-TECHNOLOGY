@@ -74,18 +74,115 @@ const ReportPage = () => {
   };
 
   const handleDownload = (report) => {
-    // Simular descarga - en producción se implementaría la descarga real
-    const dataStr = JSON.stringify(report, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${report.title.replace(/\s+/g, '_')}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+    const revenue = Number(report.revenue || 0).toFixed(0);
+    const totalDiscount = Number(report.total_discount || 0).toFixed(0);
+    const html = `<!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${report.title}</title>
+        <style>
+          * { box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+          h1 { font-size: 24px; margin: 0 0 8px; }
+          .subtitle { font-size: 12px; color: #6B7280; margin-bottom: 16px; }
+          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+          .card { border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px; }
+          .label { font-size: 12px; color: #6B7280; margin: 0 0 4px; }
+          .value { font-size: 16px; font-weight: 600; margin: 0; }
+          .tag { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+          .tag-ventas { background: #DBEAFE; color: #1E40AF; }
+          .tag-stock { background: #EDE9FE; color: #5B21B6; }
+          .tag-promo { background: #FFEDD5; color: #9A3412; }
+          .tag-default { background: #F3F4F6; color: #1F2937; }
+          .section { margin-top: 16px; }
+          .title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+          @page { size: A4; margin: 16mm; }
+          @media print {
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${report.title}</h1>
+        <div class="subtitle">Generado el ${report.report_date || ''}</div>
+        <div>
+          <span class="tag ${report.type === 'Ventas' ? 'tag-ventas' : report.type === 'Stock' ? 'tag-stock' : report.type === 'Promo' ? 'tag-promo' : 'tag-default'}">${report.type}</span>
+          <span class="tag ${report.status === 'Completado' ? 'tag-default' : 'tag-default'}" style="margin-left:8px">${report.status}</span>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <p class="label">Período</p>
+            <p class="value">${report.period || ''}</p>
+          </div>
+          <div class="card">
+            <p class="label">Fecha</p>
+            <p class="value">${report.report_date || ''}</p>
+          </div>
+        </div>
+        <div class="section">
+          <div class="title">Detalles</div>
+          <div class="card">
+            <p class="label">Descripción</p>
+            <p class="value" style="font-weight:500">${report.description || ''}</p>
+          </div>
+        </div>
+        ${report.type === 'Ventas' ? `
+          <div class="grid" style="margin-top:12px">
+            <div class="card">
+              <p class="label">Total de Ventas</p>
+              <p class="value">${report.total_sales ?? ''}</p>
+            </div>
+            <div class="card">
+              <p class="label">Ingresos</p>
+              <p class="value">$${revenue}</p>
+            </div>
+          </div>
+        ` : ''}
+        ${report.type === 'Promo' ? `
+          <div class="grid" style="margin-top:12px">
+            <div class="card">
+              <p class="label">Promociones Activas</p>
+              <p class="value">${report.active_promos ?? ''}</p>
+            </div>
+            <div class="card">
+              <p class="label">Descuento Total</p>
+              <p class="value">$${totalDiscount}</p>
+            </div>
+          </div>
+        ` : ''}
+        ${report.type === 'Stock' ? `
+          <div class="grid" style="margin-top:12px">
+            <div class="card">
+              <p class="label">Total de Productos</p>
+              <p class="value">${report.total_products ?? ''}</p>
+            </div>
+            <div class="card">
+              <p class="label">Stock Bajo</p>
+              <p class="value">${report.low_stock_items ?? ''}</p>
+            </div>
+          </div>
+        ` : ''}
+      </body>
+    </html>`;
+    const win = window.open('', '_blank');
+    if (!win) {
+      toast({
+        title: "Error",
+        description: "No se pudo abrir la ventana de impresión",
+        variant: "destructive"
+      });
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
+    win.close();
     toast({
       title: "Éxito",
-      description: "Reporte descargado",
+      description: "Usa 'Guardar como PDF' para descargar el reporte",
     });
   };
 
@@ -298,7 +395,9 @@ const ReportPage = () => {
                     </div>
                     <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                       <p className="text-sm text-green-600 mb-1">Ingresos:</p>
-                      <p className="text-2xl font-bold text-green-700">${parseFloat(selectedReport.revenue || 0).toFixed(2)}</p>
+                      <p className="text-2xl font-bold text-green-700">
+                        ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Number(selectedReport.revenue || 0))}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -324,7 +423,9 @@ const ReportPage = () => {
                     </div>
                     <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
                       <p className="text-sm text-pink-600 mb-1">Descuento Total:</p>
-                      <p className="text-2xl font-bold text-pink-700">${parseFloat(selectedReport.total_discount || 0).toFixed(2)}</p>
+                      <p className="text-2xl font-bold text-pink-700">
+                        ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Number(selectedReport.total_discount || 0))}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -335,10 +436,10 @@ const ReportPage = () => {
                     className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Descargar Reporte
-                  </Button>
+                      Descargar PDF
+                    </Button>
+                  </div>
                 </div>
-              </div>
             </motion.div>
           </motion.div>
         )}

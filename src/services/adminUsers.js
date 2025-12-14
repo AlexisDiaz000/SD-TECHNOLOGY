@@ -17,5 +17,6 @@ export const adminUsersAPI = {
   create: (email, password, role = 'editor', active = true) => request('/admin/users', { method: 'POST', body: { email, password, role, active } }),
   update: (id, payload) => request(`/admin/users/${id}`, { method: 'PATCH', body: payload }),
   remove: (id) => request(`/admin/users/${id}`, { method: 'DELETE' }),
+  health: () => request('/admin/users/health'),
 };
 

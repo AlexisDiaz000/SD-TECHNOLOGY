@@ -2,8 +2,23 @@ const express = require('express');
 const router = express.Router();
 const { supabase } = require('../supabaseClient');
 
+router.get('/health', async (req, res) => {
+  try {
+    if (!supabase) return res.status(503).json({ error: 'Supabase no configurado en backend' });
+    const hasServiceRole = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const { error } = await supabase.from('products').select('*', { count: 'exact', head: true });
+    if (error) return res.status(503).json({ error: `Supabase indisponible: ${error.message}` });
+    return res.json({ ok: true, service_role: hasServiceRole });
+  } catch (err) {
+    return res.status(503).json({ error: `Supabase health error: ${err.message}` });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return res.status(503).json({ error: 'Admin API requiere SUPABASE_SERVICE_ROLE_KEY en backend' });
+    }
     const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
     if (error) return res.status(400).json({ error: error.message });
     res.json(data || []);
@@ -14,6 +29,9 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return res.status(503).json({ error: 'Admin API requiere SUPABASE_SERVICE_ROLE_KEY en backend' });
+    }
     const { email, password, role = 'editor', active = true } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
     const { data: createdUser, error: adminErr } = await supabase.auth.admin.createUser({ email, password, email_confirm: true });
@@ -30,6 +48,9 @@ router.post('/', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return res.status(503).json({ error: 'Admin API requiere SUPABASE_SERVICE_ROLE_KEY en backend' });
+    }
     const { id } = req.params;
     const { role, active } = req.body || {};
     const update = {};
@@ -45,6 +66,9 @@ router.patch('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return res.status(503).json({ error: 'Admin API requiere SUPABASE_SERVICE_ROLE_KEY en backend' });
+    }
     const { id } = req.params;
     const { error: delErr } = await supabase.auth.admin.deleteUser(id);
     if (delErr) return res.status(400).json({ error: delErr.message });

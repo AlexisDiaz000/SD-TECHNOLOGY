@@ -166,7 +166,9 @@ const SalesPage = () => {
                   <td className="px-6 py-4 text-sm text-gray-900 font-medium">{sale.ticket_number}</td>
                   <td className="px-6 py-4 text-sm text-gray-900 font-medium">{sale.product}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{sale.quantity}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600 font-semibold text-pink-600">${parseFloat(sale.total).toFixed(2)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600 font-semibold text-pink-600">
+                    ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Number(sale.total || 0))}
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-600">{sale.sale_date} {sale.sale_time}</td>
                   <td className="px-6 py-4">
                     <button
@@ -253,17 +255,23 @@ const SalesPage = () => {
 
                 <div>
                   <p className="text-gray-600">Precio Unitario:</p>
-                  <p className="font-semibold text-pink-600">${parseFloat(selectedSale.price).toFixed(2)}</p>
+                  <p className="font-semibold text-pink-600">
+                    ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Number(selectedSale.price || 0))}
+                  </p>
                 </div>
 
                 <div className="border-t pt-3 mt-3">
                   <p className="text-gray-600">Subtotal:</p>
-                  <p className="font-semibold text-gray-800">${parseFloat(selectedSale.subtotal).toFixed(2)}</p>
+                  <p className="font-semibold text-gray-800">
+                    ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Number(selectedSale.subtotal || 0))}
+                  </p>
                 </div>
 
                 <div>
                   <p className="text-gray-600">Impuestos (6.25%):</p>
-                  <p className="font-semibold text-gray-800">${parseFloat(selectedSale.tax).toFixed(2)}</p>
+                  <p className="font-semibold text-gray-800">
+                    ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Number(selectedSale.tax || 0))}
+                  </p>
                 </div>
 
                 <div>
@@ -273,7 +281,9 @@ const SalesPage = () => {
 
                 <div className="border-t-2 border-gray-300 pt-3 mt-3">
                   <p className="text-gray-600">Total Pago:</p>
-                  <p className="font-bold text-2xl text-pink-600">${parseFloat(selectedSale.total).toFixed(2)}</p>
+                  <p className="font-bold text-2xl text-pink-600">
+                    ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Number(selectedSale.total || 0))}
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -338,9 +348,9 @@ const SalesPage = () => {
                   <input
                     type="number"
                     min="0"
-                    step="0.01"
+                    step="1"
                     value={newSale.price}
-                    onChange={(e) => setNewSale({ ...newSale, price: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => setNewSale({ ...newSale, price: parseInt(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                     data-testid="new-sale-price-input"
                   />
@@ -375,7 +385,9 @@ const SalesPage = () => {
 
                 <div className="bg-gray-100 p-4 rounded-lg">
                   <p className="text-sm text-gray-600">Total a pagar:</p>
-                  <p className="text-2xl font-bold text-pink-600">${(newSale.quantity * newSale.price).toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-pink-600">
+                    ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Number((newSale.quantity || 0) * (newSale.price || 0)))}
+                  </p>
                 </div>
 
                 <div className="flex space-x-3 pt-4">

@@ -11,8 +11,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const statisticsRoutes = require('./routes/statisticsRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
 
-// Inicializar conexión a BD (Singleton)
-require('./db');
+// Supabase-only: no inicializar PostgreSQL local
 
 const app = express();
 const PORT = process.env.PORT || 5000;

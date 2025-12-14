@@ -10,6 +10,7 @@ export default function AdminPanel() {
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState({ email: '', password: '', role: 'editor', active: true });
+  const [health, setHealth] = useState({ ok: false, service_role: false });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,8 +18,14 @@ export default function AdminPanel() {
       const u = await getUser();
       setUser(u);
       try {
-        const list = await adminUsersAPI.list();
-        setUsers(list);
+        const h = await adminUsersAPI.health();
+        setHealth(h || { ok: false, service_role: false });
+        if (h?.service_role) {
+          const list = await adminUsersAPI.list();
+          setUsers(list);
+        } else {
+          setUsers([]);
+        }
       } catch (err) {
         toast({ title: 'No se pudo cargar usuarios', description: err.message, variant: 'destructive' });
       }
@@ -38,6 +45,7 @@ export default function AdminPanel() {
   const handleCreate = async () => {
     try {
       if (!form.email || !form.password) throw new Error('Ingresa email y contraseña');
+      if (!health.service_role) throw new Error('Configura SUPABASE_SERVICE_ROLE_KEY en backend');
       const created = await adminUsersAPI.create(form.email, form.password, form.role, !!form.active);
       toast({ title: 'Usuario creado' });
       setUsers([created.profile, ...users]);
@@ -79,6 +87,11 @@ export default function AdminPanel() {
           <Button onClick={handleSignOut} className="bg-black/80 hover:bg-black text-white">Cerrar sesión</Button>
         </div>
         <div className="space-y-4">
+          {!health.service_role && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+              <p className="text-sm font-medium text-yellow-800">Admin API requiere SUPABASE_SERVICE_ROLE_KEY configurada en el backend</p>
+            </div>
+          )}
           <div className="glass-effect rounded-3xl p-6 md:p-8 shadow-2xl">
             <p className="text-sm text-black/80">Usuario</p>
             <p className="font-medium text-black">{user?.email ?? 'Cargando...'}</p>
@@ -86,14 +99,14 @@ export default function AdminPanel() {
           <div className="glass-effect rounded-3xl p-6 md:p-8 shadow-2xl">
             <p className="text-lg font-semibold mb-4 text-black">Administrar usuarios</p>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
-              <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-white border border-gray-300 text-black placeholder:text-gray-500" />
-              <Input type="password" placeholder="Contraseña" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="bg-white border border-gray-300 text-black placeholder:text-gray-500" />
-              <select className="bg-white border border-gray-300 text-black rounded px-2 py-2" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+              <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="bg-white border border-gray-300 text-black placeholder:text-gray-500" disabled={!health.service_role} />
+              <Input type="password" placeholder="Contraseña" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="bg-white border border-gray-300 text-black placeholder:text-gray-500" disabled={!health.service_role} />
+              <select className="bg-white border border-gray-300 text-black rounded px-2 py-2" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} disabled={!health.service_role}>
                 <option value="admin">admin</option>
                 <option value="editor">editor</option>
                 <option value="viewer">viewer</option>
               </select>
-              <Button onClick={handleCreate} className="bg-black/80 hover:bg-black text-white">Crear</Button>
+              <Button onClick={handleCreate} className="bg-black/80 hover:bg-black text-white" disabled={!health.service_role}>Crear</Button>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm text-black">
@@ -110,7 +123,7 @@ export default function AdminPanel() {
                     <tr key={u.user_id} className="border-t border-gray-200">
                       <td className="p-2">{u.email}</td>
                       <td className="p-2">
-                        <select className="bg-white border border-gray-300 text-black rounded px-2 py-1" value={u.role} onChange={async (e) => {
+                        <select className="bg-white border border-gray-300 text-black rounded px-2 py-1" value={u.role} disabled={!health.service_role} onChange={async (e) => {
                           try {
                             const updated = await adminUsersAPI.update(u.user_id, { role: e.target.value });
                             setUsers(users.map(x => x.user_id === u.user_id ? updated : x));
@@ -125,10 +138,10 @@ export default function AdminPanel() {
                       </td>
                       <td className="p-2">{u.active ? 'Sí' : 'No'}</td>
                       <td className="p-2 space-x-2">
-                        <Button onClick={() => handleToggleActive(u)} className="bg-black/80 hover:bg-black text-white">
+                        <Button onClick={() => handleToggleActive(u)} className="bg-black/80 hover:bg-black text-white" disabled={!health.service_role}>
                           {u.active ? 'Desactivar' : 'Activar'}
                         </Button>
-                        <Button onClick={() => handleDelete(u)} className="bg-black/80 hover:bg-black text-white">Eliminar</Button>
+                        <Button onClick={() => handleDelete(u)} className="bg-black/80 hover:bg-black text-white" disabled={!health.service_role}>Eliminar</Button>
                       </td>
                     </tr>
                   ))}

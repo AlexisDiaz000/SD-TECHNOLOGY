@@ -1,4 +1,3 @@
-const db = require('../db');
 const productRepository = require('../repositories/ProductRepository');
 const saleRepository = require('../repositories/SaleRepository');
 const promotionRepository = require('../repositories/PromotionRepository');

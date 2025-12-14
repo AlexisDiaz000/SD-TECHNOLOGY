@@ -80,7 +80,9 @@ const DashboardPage = () => {
                 <p className="text-xs opacity-80">Ventas</p>
               </div>
               <div className="text-center">
-                <p className="font-semibold">${stats.totalRevenue.toFixed(2)}</p>
+                <p className="font-semibold">
+                  ${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(stats.totalRevenue || 0)}
+                </p>
                 <p className="text-xs opacity-80">Ingresos</p>
               </div>
             </div>
@@ -95,13 +97,6 @@ const DashboardPage = () => {
             log out
           </motion.button>
           
-          <motion.button
-            className="flex items-center space-x-2 text-white hover:text-white/80 transition-colors duration-200"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <User className="w-5 h-5" />
-          </motion.button>
         </div>
       </motion.header>
 
