@@ -1,8 +1,64 @@
 # SD Technology - Sistema de Gestión de Inventario
 
+Actualización de despliegue: todo corre en Vercel con funciones serverless y Supabase. Abajo se detallan cambios, estructura y variables para reproducir el trabajo.
+
+## Cambios Clave
+- Migración del backend a funciones serverless bajo `/api/*` en Vercel.
+- Integración con Supabase: el frontend usa la `anon key` y las funciones usan la `service role key`.
+- `VITE_API_URL` ahora apunta por defecto a `/api`, evitando CORS.
+- `vercel.json` preserva `/api/*` y habilita SPA rewrites.
+- Panel de administración usa `/api/admin/users/*` con `SUPABASE_SERVICE_ROLE_KEY`.
+
+## Estructura de Carpetas (actualizada)
+```
+sd-technology/
+├── api/
+│   ├── _lib/
+│   │   └── supabaseClient.js
+│   ├── health.js
+│   └── admin/
+│       └── users/
+│           ├── index.js
+│           ├── [id].js
+│           └── health.js
+├── src/
+│   ├── services/
+│   │   ├── api.js               # base: /api
+│   │   ├── adminUsers.js        # /api/admin/users
+│   │   └── supabase.js          # cliente anon
+├── vercel.json
+├── package.json
+├── vite.config.js
+└── README.md
+```
+
+
+## Despliegue en Vercel
+- Root Directory: `sd-technology`
+- Build Command: `npm run build`
+- Output Directory: `dist`
+
+
+## API Serverless
+- `GET /api/health`
+- `GET/POST /api/admin/users`
+- `PATCH/DELETE /api/admin/users/:id`
+
+## Flujo de Datos
+- Frontend directo a Supabase:
+  - Autenticación y CRUD de módulos se realizan con el cliente `@supabase/supabase-js` configurado en `src/services/supabase.js` usando la `anon key`.
+  - Ejemplo: crear producto → React llama `supabase.from('products').insert(...)` y guarda con `created_by` del usuario autenticado.
+- Frontend a API serverless:
+  - Acciones de administración (crear/borrar usuarios, actualizar perfiles) pasan por `/api/admin/users/*` porque requieren la `service role key`.
+  - Las funciones leen `SUPABASE_SERVICE_ROLE_KEY`, ejecutan `supabase.auth.admin.*` y actualizan la tabla `profiles`.
+- Secuencia típica:
+  - Login: Front → Supabase Auth (anon) → sesión del usuario.
+  - Operaciones de negocio: Front → Supabase (anon, RLS habilitada) → tablas `products`, `sales`, `promotions`, `reports`.
+  - Administración: Front → `/api/admin/users/*` (serverless) → Supabase Admin (service role) → `auth.users` y `profiles`.
+
 SD Technology es una solución digital inteligente diseñada para transformar la manera en que gestionas tu inventario. Esta aplicación web permite a los usuarios gestionar productos, ventas, promociones y generar reportes de manera eficiente.
-# Aclaración al Docente
-El equipo de desarrollo decidio crear un repositorio totalmente nuevo para el desarrollo de esta actividad añadiendo las implementaciones antiguas en la anterior entrega.
+
+
 
 ## 🚀 Características
 
@@ -32,69 +88,7 @@ El equipo de desarrollo decidio crear un repositorio totalmente nuevo para el de
 - **dotenv 16.3.1**: Gestión de variables de entorno
 - **uuid 9.0.1**: Generación de identificadores únicos
 
-## 📁 Estructura del Proyecto
 
-```
-SD-TECHNOLOGY/
-├── backend/                    # Servidor backend
-│   ├── controllers/           # Controladores (lógica de negocio)
-│   │   ├── ProductController.js
-│   │   ├── SaleController.js
-│   │   ├── PromotionController.js
-│   │   ├── ReportController.js
-│   │   └── StatisticsController.js
-│   ├── models/                # Modelos de datos
-│   │   ├── Product.js
-│   │   ├── Sale.js
-│   │   ├── Promotion.js
-│   │   └── Report.js
-│   ├── repositories/          # Repositorios (acceso a datos)
-│   │   ├── ProductRepository.js
-│   │   ├── SaleRepository.js
-│   │   ├── PromotionRepository.js
-│   │   ├── ReportRepository.js
-│   │   └── StatisticsRepository.js
-│   ├── routes/                # Rutas de la API
-│   │   ├── productRoutes.js
-│   │   ├── saleRoutes.js
-│   │   ├── promotionRoutes.js
-│   │   ├── reportRoutes.js
-│   │   └── statisticsRoutes.js
-│   ├── patterns/              # Patrones de diseño
-│   │   ├── Observer.js        # Observer Pattern
-│   │   └── ReportFactory.js   # Factory Method Pattern
-│   ├── services/              # Servicios
-│   │   └── NotificationService.js
-│   ├── db.js                  # Singleton para conexión a BD
-│   ├── server.js              # Servidor principal
-│   ├── database.sql           # Script de creación de BD
-│   ├── package.json
-│   └── .env                   # Variables de entorno (crear)
-│
-├── src/                       # Código fuente del frontend
-│   ├── components/           # Componentes reutilizables
-│   │   ├── ui/              # Componentes de UI
-│   │   └── ModuleLayout.jsx
-│   ├── services/            # Servicios del frontend
-│   │   └── api.js          # Cliente API
-│   ├── views/              # Páginas/Vistas
-│   │   ├── WelcomePage.jsx
-│   │   ├── LoginPage.jsx
-│   │   ├── RegisterPage.jsx
-│   │   ├── DashboardPage.jsx
-│   │   ├── StockPage.jsx
-│   │   ├── SalesPage.jsx
-│   │   ├── PromoPage.jsx
-│   │   └── ReportPage.jsx
-│   ├── App.jsx             # Componente principal
-│   ├── main.jsx            # Punto de entrada
-│   └── index.css           # Estilos globales
-│
-├── package.json            # Dependencias del frontend
-├── vite.config.js         # Configuración de Vite
-├── tailwind.config.js     # Configuración de TailwindCSS
-└── README.md              # Este archivo
-```
 
 ## 🏗️ Arquitectura
 
@@ -120,244 +114,8 @@ El proyecto sigue una arquitectura **MVC (Model-View-Controller)** con los sigui
    - Notifica cambios en inventario (stock bajo)
    - Notifica activación de promociones
 
-### Flujo de Datos
 
-```
-Frontend (React) 
-    ↓
-API Service (src/services/api.js)
-    ↓
-Backend Routes (backend/routes/)
-    ↓
-Controllers (backend/controllers/)
-    ↓
-Repositories (backend/repositories/)
-    ↓
-Database (PostgreSQL)
-```
 
-## 📋 Requisitos Previos
-
-Antes de comenzar, asegúrate de tener instalado:
-
-- **Node.js** (v16 o superior) - [Descargar](https://nodejs.org/)
-- **PostgreSQL** (v12 o superior) - [Descargar](https://www.postgresql.org/download/)
-- **npm** o **yarn** (viene con Node.js)
-- **Git** - [Descargar](https://git-scm.com/)
-
-## 🔧 Instalación
-
-### 1. Clonar el Repositorio
-
-```bash
-git clone <url-del-repositorio>
-cd SD-TECHNOLOGY
-```
-
-### 2. Instalar Dependencias del Frontend
-
-```bash
-npm install
-```
-
-### 3. Instalar Dependencias del Backend
-
-```bash
-cd backend
-npm install
-cd ..
-```
-
-### 4. Configurar Base de Datos PostgreSQL
-
-1. **Crear la base de datos**:
-
-```sql
-CREATE DATABASE sd_technology;
-```
-
-2. **Ejecutar el script de creación de tablas**:
-
-```bash
-# Opción 1: Desde psql
-psql -U postgres -d sd_technology -f backend/database.sql
-
-# Opción 2: Desde pgAdmin o cualquier cliente PostgreSQL
-# Abre backend/database.sql y ejecuta el contenido
-```
-
-### 5. Configurar Variables de Entorno
-
-Crea un archivo `.env` en la carpeta `backend/`:
-
-```env
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=sd_technology
-DB_USER=postgres
-DB_PASSWORD=tu_contraseña_postgres
-
-# Server Configuration
-PORT=5000
-NODE_ENV=development
-```
-
-**Nota**: Reemplaza `tu_contraseña_postgres` con tu contraseña real de PostgreSQL.
-
-### 6. (Opcional) Configurar URL del Backend en Frontend
-
-Si el backend no está en `http://localhost:5000`, crea un archivo `.env` en la raíz del proyecto:
-
-```env
-VITE_API_URL=http://localhost:5000/api
-```
-
-## 🚀 Ejecutar el Proyecto
-
-### Desarrollo
-
-Necesitas ejecutar tanto el frontend como el backend en terminales separadas:
-
-#### Terminal 1 - Backend
-
-```bash
-cd backend
-npm start
-# o para desarrollo con auto-reload:
-npm run dev
-```
-
-El backend estará disponible en: `http://localhost:5000`
-
-#### Terminal 2 - Frontend
-
-```bash
-npm run dev
-```
-
-El frontend estará disponible en: `http://localhost:3000`
-
-### Producción
-
-#### Build del Frontend
-
-```bash
-npm run build
-```
-
-Los archivos compilados estarán en la carpeta `dist/`.
-
-#### Preview del Build
-
-```bash
-npm run preview
-```
-
-## 📡 API Endpoints
-
-### Productos (Stock)
-
-- `GET /api/products` - Obtener todos los productos
-- `GET /api/products/:id` - Obtener producto por ID
-- `POST /api/products` - Crear nuevo producto
-- `PUT /api/products/:id` - Actualizar producto
-- `DELETE /api/products/:id` - Eliminar producto
-- `GET /api/products/low-stock/alert` - Productos con stock bajo
-
-### Ventas
-
-- `GET /api/sales` - Obtener todas las ventas
-- `GET /api/sales/:id` - Obtener venta por ID
-- `POST /api/sales` - Crear nueva venta
-- `DELETE /api/sales/:id` - Eliminar venta
-
-### Promociones
-
-- `GET /api/promotions` - Obtener todas las promociones
-- `GET /api/promotions/:id` - Obtener promoción por ID
-- `POST /api/promotions` - Crear nueva promoción
-- `PUT /api/promotions/:id` - Actualizar promoción
-- `PATCH /api/promotions/:id/toggle` - Activar/Desactivar promoción
-- `DELETE /api/promotions/:id` - Eliminar promoción
-
-### Reportes
-
-- `GET /api/reports` - Obtener todos los reportes
-- `GET /api/reports/:id` - Obtener reporte por ID
-- `POST /api/reports` - Crear nuevo reporte
-- `DELETE /api/reports/:id` - Eliminar reporte
-
-### Estadísticas
-
-- `GET /api/statistics/dashboard` - Estadísticas del dashboard
-
-### Health Check
-
-- `GET /api/health` - Verificar estado del servidor
-
-## 🗄️ Base de Datos
-
-### Tablas
-
-1. **products**: Almacena información de productos
-2. **sales**: Registra todas las ventas realizadas
-3. **promotions**: Gestiona promociones y descuentos
-4. **reports**: Almacena reportes generados
-
-### Datos de Ejemplo
-
-El script `backend/database.sql` incluye datos de ejemplo para probar la aplicación:
-- 4 productos de ejemplo
-- 4 ventas de ejemplo
-- 3 promociones de ejemplo
-- 4 reportes de ejemplo
-
-## 🧪 Probar la Aplicación
-
-1. **Iniciar el backend**:
-   ```bash
-   cd backend
-   npm start
-   ```
-
-2. **Iniciar el frontend**:
-   ```bash
-   npm run dev
-   ```
-
-3. **Abrir el navegador**:
-   - Ve a `http://localhost:3000`
-   - Navega por las diferentes secciones
-   - Prueba crear, editar y eliminar productos, ventas y promociones
-
-4. **Verificar la API**:
-   - Visita `http://localhost:5000/api/health` para verificar que el backend está funcionando
-   - Prueba los endpoints con Postman o cualquier cliente HTTP
-
-## 🔍 Solución de Problemas
-
-### Error de conexión a la base de datos
-
-- Verifica que PostgreSQL esté ejecutándose
-- Confirma que las credenciales en `.env` sean correctas
-- Asegúrate de que la base de datos `sd_technology` exista
-
-### Error CORS
-
-- El backend ya tiene CORS habilitado
-- Si persiste, verifica que el frontend esté apuntando a la URL correcta
-
-### Puerto ya en uso
-
-- Cambia el puerto en `backend/.env` (PORT) o `vite.config.js` (frontend)
-- O detén el proceso que está usando el puerto
-
-## 📝 Notas Adicionales
-
-- El login actualmente es simulado (no requiere autenticación real)
-- Las notificaciones se muestran en la consola del servidor
-- Los reportes se pueden descargar en formato JSON
 
 
 ## 📄 Licencia
