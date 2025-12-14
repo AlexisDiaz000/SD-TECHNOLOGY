@@ -44,6 +44,29 @@ sd-technology/
 - `GET/POST /api/admin/users`
 - `PATCH/DELETE /api/admin/users/:id`
 
+## Backend
+- Arquitectura:
+  - Implementado con funciones serverless de Vercel (Node runtime). Cada archivo en `api/` es un endpoint HTTP.
+  - Las rutas se mapean por estructura de archivos: `api/health.js` → `/api/health`, `api/admin/users/index.js` → `/api/admin/users`, `api/admin/users/[id].js` → `/api/admin/users/:id`.
+- Archivos principales:
+  - `api/_lib/supabaseClient.js`: inicializa el cliente de Supabase leyendo `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` o `SUPABASE_ANON_KEY`. No persiste sesión en server y marca `isServiceRole` cuando hay service role.
+  - `api/health.js`: respuesta de salud de la API.
+  - `api/admin/users/index.js`: `GET` lista perfiles; `POST` crea usuario en `auth.users` y lo registra en `profiles`.
+  - `api/admin/users/[id].js`: `PATCH` actualiza perfil; `DELETE` borra usuario y su perfil.
+  - `api/admin/users/health.js`: verifica disponibilidad de Supabase y presencia de `service role`.
+- Seguridad:
+  - La `SUPABASE_SERVICE_ROLE_KEY` solo se usa en funciones serverless. Nunca se expone en el frontend.
+  - El frontend usa la `anon key` y está protegido por RLS en tablas (`created_by`, políticas por usuario).
+- Convenciones de respuesta:
+  - Éxito: JSON con datos.
+  - Errores de validación/operación: `400` con `{ error: <mensaje> }`.
+  - Falta de `service role` o indisponibilidad: `503` con `{ error: <mensaje> }`.
+- Variables requeridas en Vercel (Funciones):
+  - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`.
+- Uso recomendado:
+  - Operaciones de negocio (productos, ventas, promociones, reportes) se ejecutan desde el frontend contra Supabase.
+  - Administración de usuarios y health checks pasan por las funciones `/api/admin/users/*` y `/api/health`.
+
 ## Flujo de Datos
 - Frontend directo a Supabase:
   - Autenticación y CRUD de módulos se realizan con el cliente `@supabase/supabase-js` configurado en `src/services/supabase.js` usando la `anon key`.
