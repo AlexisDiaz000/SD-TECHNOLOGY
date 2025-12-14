@@ -81,12 +81,8 @@ SD Technology es una solución digital inteligente diseñada para transformar la
 - **Radix UI**: Componentes de UI accesibles
 
 ### Backend
-- **Node.js**: Entorno de ejecución de JavaScript
-- **Express.js 4.18.2**: Framework web para Node.js
-- **PostgreSQL**: Base de datos relacional
-- **pg 8.11.3**: Cliente PostgreSQL para Node.js
-- **dotenv 16.3.1**: Gestión de variables de entorno
-- **uuid 9.0.1**: Generación de identificadores únicos
+- **Supabase**: Baas
+
 
 
 
