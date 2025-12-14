@@ -9,6 +9,7 @@ const saleRoutes = require('./routes/saleRoutes');
 const promotionRoutes = require('./routes/promotionRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const statisticsRoutes = require('./routes/statisticsRoutes');
+const adminUserRoutes = require('./routes/adminUserRoutes');
 
 // Inicializar conexión a BD (Singleton)
 require('./db');
@@ -32,6 +33,7 @@ app.use('/api/sales', saleRoutes);
 app.use('/api/promotions', promotionRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/statistics', statisticsRoutes);
+app.use('/api/admin/users', adminUserRoutes);
 
 // Manejo de errores
 app.use((err, req, res, next) => {

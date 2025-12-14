@@ -11,6 +11,8 @@ import StockPage from '@/views/StockPage';
 import PromoPage from '@/views/PromoPage';
 import SalesPage from '@/views/SalesPage';
 import ReportPage from '@/views/ReportPage';
+import AdminPanel from '@/views/AdminPanel';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 function App() {
   return (
@@ -26,6 +28,14 @@ function App() {
             <Route path="/promo" element={<PromoPage />} />
             <Route path="/sales" element={<SalesPage />} />
             <Route path="/report" element={<ReportPage />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPanel />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </AnimatePresence>
         <Toaster />
